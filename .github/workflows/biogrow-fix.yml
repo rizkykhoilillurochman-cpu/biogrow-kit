@@ -1,0 +1,25 @@
+name: BioGrow fix
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('const KEY="biogrow-kit-v3";if(state.identity&&(state.identity.name==="Ratna Efrida"||state.identity.kelas==="VII B"||state.identity.group==="3B"||state.identity.plant==="Kacang hijau")){state.identity=null;localStorage.removeItem(KEY);}let state=', 'const KEY="biogrow-kit-v3";let state=', 1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git commit -m "Fix identity initialization order"
+          git push
