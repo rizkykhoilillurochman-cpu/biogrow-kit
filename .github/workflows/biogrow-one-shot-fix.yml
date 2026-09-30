@@ -1,0 +1,38 @@
+name: BioGrow one-shot identity fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix demo identity defaults
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('const KEY="biogrow-kit-v1";', 'const KEY="biogrow-kit-v3";', 1)
+          s = s.replace('placeholder="Ratna Efrida"', 'placeholder="Masukkan nama"', 1)
+          s = s.replace('placeholder="VII B"', 'placeholder="Masukkan kelas"', 1)
+          s = s.replace('placeholder="3B"', 'placeholder="Masukkan kelompok"', 1)
+          s = s.replace('value="${esc(x.plant||\"Kacang hijau\")}" placeholder="Kacang hijau"', 'value="${esc(x.plant)}" placeholder="Masukkan nama tanaman"', 1)
+          marker = 'const KEY="biogrow-kit-v3";'
+          guard = 'if(state.identity&&(state.identity.name==="Ratna Efrida"||state.identity.kelas==="VII B"||state.identity.group==="3B"||state.identity.plant==="Kacang hijau")){state.identity=null;localStorage.removeItem(KEY);}'
+          if guard not in s:
+              s = s.replace(marker, marker + guard, 1)
+          p.write_text(s, encoding='utf-8')
+      - name: Commit fix and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/biogrow-one-shot-fix.yml
+          git add index.html .github/workflows/biogrow-one-shot-fix.yml
+          git commit -m "Fix demo values in identity form"
+          git push
